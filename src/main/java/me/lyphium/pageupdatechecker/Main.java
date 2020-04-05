@@ -9,8 +9,8 @@ public class Main {
 
     public static void main(String[] args) {
         // Changing Console Logformat
-        System.setOut(new PrettyPrintStream(System.out, "INFO"));
-        System.setErr(new PrettyPrintStream(System.err, "ERROR"));
+//        System.setOut(new PrettyPrintStream(System.out, "INFO"));
+//        System.setErr(new PrettyPrintStream(System.err, "ERROR"));
 
         // Disable Debug Log
         final Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);

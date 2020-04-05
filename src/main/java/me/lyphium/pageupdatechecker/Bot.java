@@ -2,7 +2,7 @@ package me.lyphium.pageupdatechecker;
 
 import lombok.Getter;
 import me.lyphium.pageupdatechecker.database.DatabaseConnection;
-import me.lyphium.pageupdatechecker.parser.PageParser;
+import me.lyphium.pageupdatechecker.checker.PageChecker;
 import me.lyphium.pageupdatechecker.utils.Command;
 import me.lyphium.pageupdatechecker.utils.Utils;
 
@@ -16,7 +16,7 @@ public class Bot {
 
     private boolean running;
 
-    private PageParser parser;
+    private PageChecker checker;
     private DatabaseConnection database;
 
     public Bot() {
@@ -28,7 +28,7 @@ public class Bot {
         registerCommands();
 
         // Parsing start arguments
-        long delay = PageParser.DEFAULT_DELAY;
+        long delay = PageChecker.DEFAULT_DELAY;
         for (int i = 0; i < args.length; i++) {
             final String part = args[i];
 
@@ -41,8 +41,8 @@ public class Bot {
         // Setting up Database Connection
         this.database = new DatabaseConnection("127.0.0.1", 3306, "PageUpdate", "root", "");
 
-        // Creating Parse Thread
-        this.parser = new PageParser(delay);
+        // Creating Checker Thread
+        this.checker = new PageChecker(delay);
     }
 
     public void start() {
@@ -54,8 +54,8 @@ public class Bot {
             System.err.println("No database connection currently available. Please check");
         }
 
-        // Starting Parse Thread
-        parser.start();
+        // Starting Checker Thread
+        checker.start();
 
         // Handle Console commands
         handleInput();
@@ -68,8 +68,8 @@ public class Bot {
         // Shutting down databaseconnection
         database.stop();
 
-        // Shutting down Parse Thread
-        parser.cancel();
+        // Shutting down Checker Thread
+        checker.cancel();
 
         System.out.println("Goodbye. See you soon! c:");
     }
