@@ -4,10 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import me.lyphium.pageupdatechecker.Bot;
 import me.lyphium.pageupdatechecker.database.DatabaseConnection;
+import me.lyphium.pageupdatechecker.utils.MailUtils;
+import me.lyphium.pageupdatechecker.utils.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Document.OutputSettings;
-import org.jsoup.parser.Parser;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,9 +44,9 @@ public class PageChecker extends Thread {
 
         // Checking if the bot is still running
         while (Bot.getInstance().isRunning()) {
-            try {
-                long time = System.currentTimeMillis();
+            long time = System.currentTimeMillis();
 
+            try {
                 // Checking if the connection to the database is available, otherwise don't check for update
                 if (!Bot.getInstance().getDatabase().isConnected()) {
                     System.err.println("Can't update database! No connection available");
@@ -56,20 +57,29 @@ public class PageChecker extends Thread {
                     final List<PageUpdate> pages = update();
                     if (pages != null && pages.size() > 0) {
                         System.out.println(pages.stream().map(PageUpdate::getName).collect(Collectors.joining(", ", "Updates: ", "")));
+
+                        final List<Pair<String, String>> list = MailUtils.createMailContent(pages);
+//                        final boolean success = MailUtils.sendUpateMail(list);
+//
+//                        if (!success) {
+//                            System.err.println("It looks like at least one mail had a problem will sending");
+//                        }
                     }
 
                     System.out.println("Finished: Check complete (" + (System.currentTimeMillis() - time) + "ms)");
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
+            try {
                 // Calculate sleeping time from delay
                 time = delay - (System.currentTimeMillis() - time);
                 if (time > 0) {
                     Thread.sleep(time);
                 }
             } catch (InterruptedException e) {
-                // Thrown when PageParseThread is shutting down
-            } catch (Exception e) {
-                e.printStackTrace();
+                // Thrown when PageCheckerThread is shutting down
             }
         }
     }
@@ -97,7 +107,6 @@ public class PageChecker extends Thread {
         pages.parallelStream().forEach(page -> {
             // Load HTML-Page
             final Document doc = loadPage(page.getUrl());
-            doc.outputSettings(SETTINGS);
 
             // Check if prices exists (HTML-Page correct and prices exist)
             if (doc == null) {
@@ -105,14 +114,11 @@ public class PageChecker extends Thread {
                 return;
             }
 
-            final Document old = Parser.parse(page.getContent(), page.getUrl());
-            old.outputSettings(SETTINGS);
+            final String html = doc.outerHtml();
 
-            if (hasChanged(old, doc)) {
+            if (!html.equals(page.getContent())) {
                 page.setLastUpdate(time);
-                page.setContent(doc.toString());
-
-                System.out.println(doc.toString());
+                page.setContent(html);
 
                 updatedPages.add(page);
             }
@@ -139,16 +145,18 @@ public class PageChecker extends Thread {
         try {
             // Load HTML-Page
             final Document doc = Jsoup.connect(url).get();
-            doc.select("script").remove();
+
+            // Trim page and string structure
+            if (doc != null) {
+                doc.outputSettings(SETTINGS);
+                doc.select("script").remove();
+            }
+
             return doc;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
-    }
-
-    private boolean hasChanged(Document oldPage, Document newPage) {
-        return !oldPage.hasSameValue(newPage);
     }
 
 }

@@ -35,9 +35,9 @@ CREATE TABLE `pages`
     `url`        varchar(256)         NOT NULL,
     `lastUpdate` timestamp            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `content`    longtext             NOT NULL,
+    `mail`       varchar(128),
     PRIMARY KEY (`id`),
-    UNIQUE KEY `name` (`name`),
-    UNIQUE KEY `url` (`url`)
+    UNIQUE KEY `name` (`name`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
 

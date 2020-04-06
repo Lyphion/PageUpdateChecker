@@ -17,17 +17,19 @@ public class PageUpdate implements Serializable {
 
     private long lastUpdate;
     private String content;
+    private String mail;
 
     public PageUpdate(int id, String name, String url) {
-        this(id, name, url, 0, "");
+        this(id, name, url, 0, "", null);
     }
 
-    public PageUpdate(int id, String name, String url, long lastUpdate, String content) {
+    public PageUpdate(int id, String name, String url, long lastUpdate, String content, String mail) {
         this.id = id;
         this.name = name;
         this.url = url;
         this.lastUpdate = lastUpdate;
         this.content = content;
+        this.mail = mail;
     }
 
     @Override
@@ -38,6 +40,7 @@ public class PageUpdate implements Serializable {
                 ", url='" + url + '\'' +
                 ", lastUpdate=" + lastUpdate +
                 ", content='" + content + '\'' +
+                ", mail='" + mail + '\'' +
                 '}';
     }
 

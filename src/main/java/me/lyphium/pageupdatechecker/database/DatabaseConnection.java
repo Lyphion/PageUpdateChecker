@@ -40,7 +40,7 @@ public class DatabaseConnection {
     }
 
     public List<PageUpdate> getPages() {
-        final String sql = "SELECT id, name, url, lastUpdate, content from pages;";
+        final String sql = "SELECT id, name, url, lastUpdate, content, mail from pages;";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql);
@@ -54,8 +54,9 @@ public class DatabaseConnection {
                 final String url = set.getString("url");
                 final long lastUpdate = set.getTimestamp("lastUpdate").getTime();
                 final String content = set.getString("content");
+                final String mail = set.getString("mail");
 
-                final PageUpdate priceData = new PageUpdate(id, name, url, lastUpdate, content);
+                final PageUpdate priceData = new PageUpdate(id, name, url, lastUpdate, content, mail);
                 data.add(priceData);
             }
 
@@ -67,7 +68,7 @@ public class DatabaseConnection {
     }
 
     public PageUpdate getPageByID(int id) {
-        final String sql = "SELECT name, url, lastUpdate, content FROM pages WHERE id = ? LIMIT 1;";
+        final String sql = "SELECT name, url, lastUpdate, content, mail FROM pages WHERE id = ? LIMIT 1;";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql)) {
@@ -83,8 +84,9 @@ public class DatabaseConnection {
                 final String url = set.getString("url");
                 final long lastUpdate = set.getTimestamp("lastUpdate").getTime();
                 final String content = set.getString("content");
+                final String mail = set.getString("mail");
 
-                return new PageUpdate(id, name, url, lastUpdate, content);
+                return new PageUpdate(id, name, url, lastUpdate, content, mail);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -93,7 +95,7 @@ public class DatabaseConnection {
     }
 
     public PageUpdate getPageByName(String name) {
-        final String sql = "SELECT id, url, lastUpdate, content FROM pages WHERE LOWER(name) = LOWER(?) LIMIT 1;";
+        final String sql = "SELECT id, url, lastUpdate, content, mail FROM pages WHERE LOWER(name) = LOWER(?) LIMIT 1;";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql)) {
@@ -109,8 +111,9 @@ public class DatabaseConnection {
                 final String url = set.getString("url");
                 final long lastUpdate = set.getTimestamp("lastUpdate").getTime();
                 final String content = set.getString("content");
+                final String mail = set.getString("mail");
 
-                return new PageUpdate(id, name, url, lastUpdate, content);
+                return new PageUpdate(id, name, url, lastUpdate, content, mail);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -142,7 +145,7 @@ public class DatabaseConnection {
     }
 
     public PageUpdate getPageByUrl(String url) {
-        final String sql = "SELECT id, name, lastUpdate, content FROM pages WHERE LOWER(url) = LOWER(?) LIMIT 1;";
+        final String sql = "SELECT id, name, lastUpdate, content, mail FROM pages WHERE LOWER(url) = LOWER(?) LIMIT 1;";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql)) {
@@ -158,8 +161,9 @@ public class DatabaseConnection {
                 final String name = set.getString("name");
                 final long lastUpdate = set.getTimestamp("lastUpdate").getTime();
                 final String content = set.getString("content");
+                final String mail = set.getString("mail");
 
-                return new PageUpdate(id, name, url, lastUpdate, content);
+                return new PageUpdate(id, name, url, lastUpdate, content, mail);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -206,7 +210,7 @@ public class DatabaseConnection {
             return false;
         }
 
-        final String sql = "INSERT INTO pages (name, url, lastUpdate, content) VALUES (?, ?, ?, ?);";
+        final String sql = "INSERT INTO pages (name, url, lastUpdate, content, mail) VALUES (?, ?, ?, ?, ?);";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql)) {
@@ -215,6 +219,7 @@ public class DatabaseConnection {
             statement.setString(2, page.getUrl());
             statement.setTimestamp(2, new Timestamp(page.getLastUpdate()));
             statement.setString(3, page.getContent());
+            statement.setString(4, page.getMail());
 
             return statement.executeUpdate() != 0;
         } catch (SQLException e) {

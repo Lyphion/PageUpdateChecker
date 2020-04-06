@@ -31,6 +31,13 @@
             <version>LATEST</version>
         </dependency>
 
+        <!-- E-Mail -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
         <!-- HikariCP -->
         <dependency>
             <groupId>com.zaxxer</groupId>
