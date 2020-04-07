@@ -1,8 +1,9 @@
 package me.lyphium.pageupdatechecker;
 
 import lombok.Getter;
-import me.lyphium.pageupdatechecker.database.DatabaseConnection;
 import me.lyphium.pageupdatechecker.checker.PageChecker;
+import me.lyphium.pageupdatechecker.command.*;
+import me.lyphium.pageupdatechecker.database.DatabaseConnection;
 import me.lyphium.pageupdatechecker.utils.Command;
 import me.lyphium.pageupdatechecker.utils.Utils;
 
@@ -100,7 +101,11 @@ public class Bot {
 
     private void registerCommands() {
         // Register all commands
-
+        Command.registerCommand(new AddPageCommand());
+        Command.registerCommand(new HelpCommand());
+        Command.registerCommand(new PrintCommand());
+        Command.registerCommand(new RemovePageCommand());
+        Command.registerCommand(new UpdateCommand());
     }
 
 }

@@ -19,7 +19,7 @@ public class PageUpdate implements Serializable {
     private String content;
     private String mail;
 
-    public PageUpdate(int id, String name, String url) {
+    public PageUpdate(int id, String name, String url, String mail) {
         this(id, name, url, 0, "", null);
     }
 

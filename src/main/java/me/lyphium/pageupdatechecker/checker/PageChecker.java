@@ -58,12 +58,16 @@ public class PageChecker extends Thread {
                     if (pages != null && pages.size() > 0) {
                         System.out.println(pages.stream().map(PageUpdate::getName).collect(Collectors.joining(", ", "Updates: ", "")));
 
+                        // Creating mails
                         final List<Pair<String, String>> list = MailUtils.createMailContent(pages);
-//                        final boolean success = MailUtils.sendUpateMail(list);
-//
-//                        if (!success) {
-//                            System.err.println("It looks like at least one mail had a problem will sending");
-//                        }
+                        final boolean success = true; //MailUtils.sendUpateMail(list);
+
+                        // Printing if mailing was successful
+                        if (success) {
+                            System.out.println("Sendet " + list.size() + " mails");
+                        } else {
+                            System.err.println("It looks like at least one mail had a problem will sending");
+                        }
                     }
 
                     System.out.println("Finished: Check complete (" + (System.currentTimeMillis() - time) + "ms)");
@@ -106,7 +110,7 @@ public class PageChecker extends Thread {
 
         pages.parallelStream().forEach(page -> {
             // Load HTML-Page
-            final Document doc = loadPage(page.getUrl());
+            final String doc = loadPage(page.getUrl());
 
             // Check if prices exists (HTML-Page correct and prices exist)
             if (doc == null) {
@@ -114,11 +118,9 @@ public class PageChecker extends Thread {
                 return;
             }
 
-            final String html = doc.outerHtml();
-
-            if (!html.equals(page.getContent())) {
+            if (!doc.equals(page.getContent())) {
                 page.setLastUpdate(time);
-                page.setContent(html);
+                page.setContent(doc);
 
                 updatedPages.add(page);
             }
@@ -141,7 +143,7 @@ public class PageChecker extends Thread {
         System.out.println("Shut down Page Checker");
     }
 
-    private Document loadPage(String url) {
+    public String loadPage(String url) {
         try {
             // Load HTML-Page
             final Document doc = Jsoup.connect(url).get();
@@ -150,9 +152,11 @@ public class PageChecker extends Thread {
             if (doc != null) {
                 doc.outputSettings(SETTINGS);
                 doc.select("script").remove();
+
+                return doc.outerHtml();
             }
 
-            return doc;
+            return null;
         } catch (IOException e) {
             e.printStackTrace();
             return null;

@@ -47,6 +47,7 @@ public class MailUtils {
     public List<Pair<String, String>> createMailContent(List<PageUpdate> pages) {
         final Map<String, List<PageUpdate>> map = new HashMap<>();
 
+        // Maping Pageupdates to mails
         for (PageUpdate page : pages) {
             if (page.getMail() != null) {
                 if (!map.containsKey(page.getMail())) {
@@ -56,6 +57,7 @@ public class MailUtils {
             }
         }
 
+        // Check if any mails have to be created
         if (map.isEmpty()) {
             return Collections.emptyList();
         }
@@ -63,15 +65,17 @@ public class MailUtils {
         final Random random = new Random();
         final List<Pair<String, String>> mailContent = new ArrayList<>();
 
+        // Create all mails
         for (Entry<String, List<PageUpdate>> entry : map.entrySet()) {
             final List<PageUpdate> list = entry.getValue();
-
             final StringBuilder builder = new StringBuilder();
 
+            // Build page part
             for (PageUpdate p : list) {
                 builder.append(" > ").append(p.getName()).append(": ").append(p.getUrl()).append('\n');
             }
 
+            // Pick random message and add pages
             final String msg = messages[random.nextInt(messages.length)].replace("%s", builder.toString());
             mailContent.add(new Pair<>(entry.getKey(), msg));
         }
@@ -81,6 +85,8 @@ public class MailUtils {
 
     public boolean sendUpateMail(List<Pair<String, String>> mailContent) {
         boolean success = true;
+
+        // Send each mail and check if all was successful
         for (Pair<String, String> pair : mailContent) {
             success &= sendMail("Webseiten Update", pair.getFirst(), pair.getSecond());
         }
