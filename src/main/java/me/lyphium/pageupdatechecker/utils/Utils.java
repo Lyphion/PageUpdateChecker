@@ -48,6 +48,11 @@ public class Utils {
         }
     }
 
+    public boolean parseBoolean(String s) {
+        s = s.trim().toLowerCase();
+        return s.equals("1") || s.equals("true") || s.equals("yes");
+    }
+
     public int distance(String from, String to) {
         final int fromLength = from.length() + 1;
         final int toLength = to.length() + 1;

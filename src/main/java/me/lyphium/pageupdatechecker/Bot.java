@@ -30,12 +30,16 @@ public class Bot {
 
         // Parsing start arguments
         long delay = PageChecker.DEFAULT_DELAY;
+        boolean sendingMails = true;
         for (int i = 0; i < args.length; i++) {
             final String part = args[i];
 
             // Parsing the delay time between checks
             if (part.equals("-d") && i < args.length - 1) {
                 delay = Utils.calculateDelay(args[i + 1]);
+                i++;
+            } else if (part.equals("--nm")) {
+                sendingMails = false;
             }
         }
 
@@ -43,7 +47,7 @@ public class Bot {
         this.database = new DatabaseConnection("127.0.0.1", 3306, "PageUpdate", "root", "");
 
         // Creating Checker Thread
-        this.checker = new PageChecker(delay);
+        this.checker = new PageChecker(delay, sendingMails);
     }
 
     public void start() {
@@ -102,7 +106,9 @@ public class Bot {
     private void registerCommands() {
         // Register all commands
         Command.registerCommand(new AddPageCommand());
+        Command.registerCommand(new DelayCommand());
         Command.registerCommand(new HelpCommand());
+        Command.registerCommand(new MailCommand());
         Command.registerCommand(new PrintCommand());
         Command.registerCommand(new RemovePageCommand());
         Command.registerCommand(new UpdateCommand());

@@ -15,18 +15,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
+@Setter
 public class PageChecker extends Thread {
 
     public static final long DEFAULT_DELAY = 60 * 60 * 1000;
 
     private static final OutputSettings SETTINGS = new OutputSettings().prettyPrint(false);
 
-    @Getter
-    @Setter
     private long delay;
+    private boolean sendingMails;
 
-    public PageChecker(long delay) {
+    public PageChecker(long delay, boolean sendingMails) {
         this.delay = delay;
+        this.sendingMails = sendingMails;
 
         setName("PageChecker");
         setDaemon(true);
@@ -42,45 +44,25 @@ public class PageChecker extends Thread {
         System.out.println("Started Page Checker");
         System.out.println("Checking Pages every " + (delay / 1000) + "sec");
 
+        if (sendingMails) {
+            System.out.println("Mails are sent");
+        } else {
+            System.out.println("Mails aren't sent");
+        }
+
         // Checking if the bot is still running
         while (Bot.getInstance().isRunning()) {
-            long time = System.currentTimeMillis();
+            final long time = handleUpdate();
 
-            try {
-                // Checking if the connection to the database is available, otherwise don't check for update
-                if (!Bot.getInstance().getDatabase().isConnected()) {
-                    System.err.println("Can't update database! No connection available");
-                } else {
-                    System.out.println("Checking pages...");
-
-                    // Check for page update
-                    final List<PageUpdate> pages = update();
-                    if (pages != null && pages.size() > 0) {
-                        System.out.println(pages.stream().map(PageUpdate::getName).collect(Collectors.joining(", ", "Updates: ", "")));
-
-                        // Creating mails
-                        final List<Pair<String, String>> list = MailUtils.createMailContent(pages);
-                        final boolean success = true; //MailUtils.sendUpateMail(list);
-
-                        // Printing if mailing was successful
-                        if (success) {
-                            System.out.println("Sendet " + list.size() + " mails");
-                        } else {
-                            System.err.println("It looks like at least one mail had a problem will sending");
-                        }
-                    }
-
-                    System.out.println("Finished: Check complete (" + (System.currentTimeMillis() - time) + "ms)");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (time > -1) {
+                System.out.println("Finished: Check complete (" + time + "ms)");
             }
 
             try {
                 // Calculate sleeping time from delay
-                time = delay - (System.currentTimeMillis() - time);
-                if (time > 0) {
-                    Thread.sleep(time);
+                final long pause = delay - time;
+                if (pause > 0) {
+                    Thread.sleep(pause);
                 }
             } catch (InterruptedException e) {
                 // Thrown when PageCheckerThread is shutting down
@@ -88,7 +70,47 @@ public class PageChecker extends Thread {
         }
     }
 
-    public synchronized List<PageUpdate> update() {
+    public long handleUpdate() {
+        try {
+            // Checking if the connection to the database is available, otherwise don't check for update
+            if (!Bot.getInstance().getDatabase().isConnected()) {
+                System.err.println("Can't update database! No connection available");
+                return -1;
+            }
+
+            long time = System.currentTimeMillis();
+            System.out.println("Checking pages...");
+
+            // Check for page update
+            final List<PageUpdate> pages = update();
+            if (pages != null && pages.size() > 0) {
+                System.out.println(pages.stream().map(PageUpdate::getName).collect(Collectors.joining(", ", "Updates: ", "")));
+
+                // Check if mails should be sended
+                if (sendingMails) {
+                    // Creating mails
+                    final List<Pair<String, String>> list = MailUtils.createMailContent(pages);
+                    final boolean success = true; //MailUtils.sendUpateMail(list);
+
+                    // Printing if mailing was successful
+                    if (success) {
+                        System.out.println("Sendet " + list.size() + " mails");
+                    } else {
+                        System.err.println("It looks like at least one mail had a problem will sending");
+                    }
+                }
+            }
+
+            time = System.currentTimeMillis() - time;
+
+            return time;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    private synchronized List<PageUpdate> update() {
         final DatabaseConnection database = Bot.getInstance().getDatabase();
 
         // Checking if the connection to the database is available
