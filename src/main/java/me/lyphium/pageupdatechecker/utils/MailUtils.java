@@ -83,7 +83,7 @@ public class MailUtils {
         return mailContent;
     }
 
-    public boolean sendUpateMail(List<Pair<String, String>> mailContent) {
+    public boolean sendUpdateMail(List<Pair<String, String>> mailContent) {
         boolean success = true;
 
         // Send each mail and check if all was successful

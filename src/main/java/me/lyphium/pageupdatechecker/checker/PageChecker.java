@@ -52,15 +52,12 @@ public class PageChecker extends Thread {
 
         // Checking if the bot is still running
         while (Bot.getInstance().isRunning()) {
-            final long time = handleUpdate();
-
-            if (time > -1) {
-                System.out.println("Finished: Check complete (" + time + "ms)");
-            }
+            final long time = update();
 
             try {
                 // Calculate sleeping time from delay
                 final long pause = delay - time;
+
                 if (pause > 0) {
                     Thread.sleep(pause);
                 }
@@ -70,19 +67,20 @@ public class PageChecker extends Thread {
         }
     }
 
-    public long handleUpdate() {
+    public synchronized long update() {
+        long time = System.currentTimeMillis();
+
         try {
             // Checking if the connection to the database is available, otherwise don't check for update
             if (!Bot.getInstance().getDatabase().isConnected()) {
                 System.err.println("Can't update database! No connection available");
-                return -1;
+                return System.currentTimeMillis() - time;
             }
 
-            long time = System.currentTimeMillis();
             System.out.println("Checking pages...");
 
             // Check for page update
-            final List<PageUpdate> pages = update();
+            final List<PageUpdate> pages = handleUpdate();
             if (pages != null && pages.size() > 0) {
                 System.out.println(pages.stream().map(PageUpdate::getName).collect(Collectors.joining(", ", "Updates: ", "")));
 
@@ -102,15 +100,16 @@ public class PageChecker extends Thread {
             }
 
             time = System.currentTimeMillis() - time;
+            System.out.println("Finished: Check complete (" + time + "ms)");
 
             return time;
         } catch (Exception e) {
             e.printStackTrace();
-            return -1;
+            return System.currentTimeMillis() - time;
         }
     }
 
-    private synchronized List<PageUpdate> update() {
+    private synchronized List<PageUpdate> handleUpdate() {
         final DatabaseConnection database = Bot.getInstance().getDatabase();
 
         // Checking if the connection to the database is available
@@ -134,12 +133,13 @@ public class PageChecker extends Thread {
             // Load HTML-Page
             final String doc = loadPage(page.getUrl());
 
-            // Check if prices exists (HTML-Page correct and prices exist)
+            // Check if page exists
             if (doc == null) {
                 System.err.println("Couldn't load page for: " + page.getName());
                 return;
             }
 
+            // Check if pagecontent has changed
             if (!doc.equals(page.getContent())) {
                 page.setLastUpdate(time);
                 page.setContent(doc);
@@ -148,7 +148,7 @@ public class PageChecker extends Thread {
             }
         });
 
-        // Save prices in database
+        // Save pages in database
         database.savePages(updatedPages);
         System.gc();
 

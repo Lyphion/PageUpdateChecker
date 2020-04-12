@@ -20,11 +20,7 @@ public class UpdateCommand extends Command {
             return false;
         }
 
-        final long time = Bot.getInstance().getChecker().handleUpdate();
-
-        if (time > -1) {
-            System.out.println("Finished: Check complete (" + time + "ms)");
-        }
+        Bot.getInstance().getChecker().update();
 
         return true;
     }
