@@ -5,6 +5,7 @@ import me.lyphium.pageupdatechecker.checker.PageChecker;
 import me.lyphium.pageupdatechecker.command.*;
 import me.lyphium.pageupdatechecker.database.DatabaseConnection;
 import me.lyphium.pageupdatechecker.utils.Command;
+import me.lyphium.pageupdatechecker.utils.PrettyPrintStream;
 import me.lyphium.pageupdatechecker.utils.Utils;
 
 import java.io.BufferedReader;
@@ -43,13 +44,16 @@ public class Bot {
             if (part.equals("-d") && i < args.length - 1) {
                 delay = Utils.calculateDelay(args[i + 1]);
                 i++;
-            } else if (part.equals("--nm")) {
+            }
+            // Disable update mails
+            else if (part.equals("--nm")) {
                 sendingMails = false;
             }
+            // Disable log file
+            else if (part.equals("-nl")) {
+                PrettyPrintStream.setLog(false);
+            }
         }
-
-        // Setting up Database Connection
-        this.database = loadDatabase();
 
         // Creating Checker Thread
         this.checker = new PageChecker(delay, sendingMails);
@@ -58,6 +62,13 @@ public class Bot {
     public void start() {
         this.running = true;
         System.out.println("Starting Bot...");
+
+        if (!PrettyPrintStream.isLog()) {
+            System.out.println("Log disabled");
+        }
+
+        // Setting up Database Connection
+        this.database = loadDatabase();
 
         // Test for valid database connection
         if (!database.isConnected()) {
