@@ -10,6 +10,7 @@ import java.util.List;
 
 @CommandInfo(
         description = "Print information from the database",
+        shortUsage = "print pages",
         usage = "print pages [pattern]"
 )
 public class PrintCommand extends Command {

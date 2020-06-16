@@ -34,7 +34,7 @@ CREATE TABLE `pages`
     `name`       varchar(128)         NOT NULL,
     `url`        varchar(256)         NOT NULL,
     `lastUpdate` timestamp            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `content`    longtext             NOT NULL,
+    `content`    longtext             NOT NULL DEFAULT "",
     `mail`       varchar(128),
     PRIMARY KEY (`id`),
     UNIQUE KEY `name` (`name`)

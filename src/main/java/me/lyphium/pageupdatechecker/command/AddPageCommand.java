@@ -11,6 +11,7 @@ import java.util.Collections;
 
 @CommandInfo(
         description = "Adds a new page to the database",
+        shortUsage = "addpage <name> <url>",
         usage = "addpage <name> <url> [mail]",
         aliases = "add"
 )

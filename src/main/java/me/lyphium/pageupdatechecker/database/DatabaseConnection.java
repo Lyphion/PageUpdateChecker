@@ -210,16 +210,14 @@ public class DatabaseConnection {
             return false;
         }
 
-        final String sql = "INSERT INTO pages (name, url, lastUpdate, content, mail) VALUES (?, ?, ?, ?, ?);";
+        final String sql = "INSERT INTO pages (name, url, mail) VALUES (?, ?, ?);";
 
         try (Connection con = source.getConnection();
              PreparedStatement statement = con.prepareStatement(sql)) {
 
             statement.setString(1, page.getName());
             statement.setString(2, page.getUrl());
-            statement.setTimestamp(2, new Timestamp(page.getLastUpdate()));
-            statement.setString(3, page.getContent());
-            statement.setString(4, page.getMail());
+            statement.setString(3, page.getMail());
 
             return statement.executeUpdate() != 0;
         } catch (SQLException e) {

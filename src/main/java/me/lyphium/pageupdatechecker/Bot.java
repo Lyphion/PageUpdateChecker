@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -37,6 +38,7 @@ public class Bot {
         // Parsing start arguments
         long delay = PageChecker.DEFAULT_DELAY;
         boolean sendingMails = true;
+        long startTime = 0;
         for (int i = 0; i < args.length; i++) {
             final String part = args[i];
 
@@ -49,6 +51,28 @@ public class Bot {
             else if (part.equals("--nm")) {
                 sendingMails = false;
             }
+            // Set first update
+            else if (part.equals("-st") && i < args.length - 1) {
+                final String t = args[i + 1];
+                if (!t.matches("([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)")) {
+                    continue;
+                }
+
+                final String[] split = t.split(":");
+
+                final Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseUnsignedInt(split[0]));
+                cal.set(Calendar.MINUTE, Integer.parseUnsignedInt(split[1]));
+                cal.set(Calendar.SECOND, Integer.parseUnsignedInt(split[2]));
+
+                if (cal.getTimeInMillis() < System.currentTimeMillis()) {
+                    cal.add(Calendar.DATE, 1);
+                }
+
+                startTime = cal.getTimeInMillis();
+
+                i++;
+            }
             // Disable log file
             else if (part.equals("-nl")) {
                 PrettyPrintStream.setLog(false);
@@ -56,7 +80,7 @@ public class Bot {
         }
 
         // Creating Checker Thread
-        this.checker = new PageChecker(delay, sendingMails);
+        this.checker = new PageChecker(delay, startTime, sendingMails);
     }
 
     public void start() {

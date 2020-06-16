@@ -6,12 +6,14 @@ import me.lyphium.pageupdatechecker.Bot;
 import me.lyphium.pageupdatechecker.database.DatabaseConnection;
 import me.lyphium.pageupdatechecker.utils.MailUtils;
 import me.lyphium.pageupdatechecker.utils.Pair;
+import me.lyphium.pageupdatechecker.utils.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Document.OutputSettings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,10 +26,12 @@ public class PageChecker extends Thread {
     private static final OutputSettings SETTINGS = new OutputSettings().prettyPrint(false);
 
     private long delay;
+    private final long startTime;
     private boolean sendingMails;
 
-    public PageChecker(long delay, boolean sendingMails) {
+    public PageChecker(long delay, long startTime, boolean sendingMails) {
         this.delay = delay;
+        this.startTime = startTime;
         this.sendingMails = sendingMails;
 
         setName("PageChecker");
@@ -35,6 +39,7 @@ public class PageChecker extends Thread {
     }
 
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         if (delay < 0) {
             System.out.println("Automatic Page Checker disabled");
@@ -50,6 +55,15 @@ public class PageChecker extends Thread {
             System.out.println("Mails aren't sent");
         }
 
+        if (startTime > System.currentTimeMillis()) {
+            System.out.println("First Check: " + Utils.toString(new Date(startTime)));
+            try {
+                Thread.sleep(startTime - System.currentTimeMillis());
+            } catch (InterruptedException e) {
+                // Thrown when PageCheckerThread is shutting down
+            }
+        }
+
         // Checking if the bot is still running
         while (Bot.getInstance().isRunning()) {
             final long time = update();
@@ -57,7 +71,6 @@ public class PageChecker extends Thread {
             try {
                 // Calculate sleeping time from delay
                 final long pause = delay - time;
-
                 if (pause > 0) {
                     Thread.sleep(pause);
                 }
@@ -88,11 +101,11 @@ public class PageChecker extends Thread {
                 if (sendingMails) {
                     // Creating mails
                     final List<Pair<String, String>> list = MailUtils.createMailContent(pages);
-                    final boolean success = true; //MailUtils.sendUpateMail(list);
+                    final boolean success = MailUtils.sendUpdateMail(list);
 
                     // Printing if mailing was successful
                     if (success) {
-                        System.out.println("Sendet " + list.size() + " mails");
+                        System.out.println("Sended " + list.size() + " mails");
                     } else {
                         System.err.println("It looks like at least one mail had a problem will sending");
                     }
