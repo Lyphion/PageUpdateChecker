@@ -15,39 +15,45 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
-public class PageChecker extends Thread {
+public class PageChecker {
 
-    public static final long DEFAULT_DELAY = 60 * 60 * 1000;
+    public static final long DEFAULT_PERIOD = 60 * 60 * 1000;
 
     private static final OutputSettings SETTINGS = new OutputSettings().prettyPrint(false);
 
-    private long delay;
+    @Getter
+    private final long period;
+    @Getter
     private final long startTime;
+    @Getter @Setter
     private boolean sendingMails;
 
-    public PageChecker(long delay, long startTime, boolean sendingMails) {
-        this.delay = delay;
+    private final ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+
+    public PageChecker(long period, long startTime, boolean sendingMails) {
+        this.period = period;
         this.startTime = startTime;
         this.sendingMails = sendingMails;
-
-        setName("PageChecker");
-        setDaemon(true);
     }
 
-    @Override
-    @SuppressWarnings("BusyWait")
-    public void run() {
-        if (delay < 0) {
+    public void start() {
+        if (period < 0) {
             System.out.println("Automatic Page Checker disabled");
             return;
         }
 
         System.out.println("Started Page Checker");
-        System.out.println("Checking Pages every " + (delay / 1000) + "sec");
+
+        if (period < 1000) {
+            System.out.println("Checking Pages every " + period + "ms");
+        } else {
+            System.out.println("Checking Pages every " + (period / 1000) + "sec");
+        }
 
         if (sendingMails) {
             System.out.println("Mails are sent");
@@ -55,39 +61,30 @@ public class PageChecker extends Thread {
             System.out.println("Mails aren't sent");
         }
 
+        final long startDelay;
         if (startTime > System.currentTimeMillis()) {
             System.out.println("First Check: " + Utils.toString(new Date(startTime)));
-            try {
-                Thread.sleep(startTime - System.currentTimeMillis());
-            } catch (InterruptedException e) {
-                // Thrown when PageCheckerThread is shutting down
-            }
+            startDelay = startTime - System.currentTimeMillis();
+        } else {
+            startDelay = 0;
         }
 
-        // Checking if the bot is still running
-        while (Bot.getInstance().isRunning()) {
-            final long time = update();
-
-            try {
-                // Calculate sleeping time from delay
-                final long pause = delay - time;
-                if (pause > 0) {
-                    Thread.sleep(pause);
-                }
-            } catch (InterruptedException e) {
-                // Thrown when PageCheckerThread is shutting down
-            }
-        }
+        service.scheduleAtFixedRate(
+                this::update,
+                startDelay,
+                period,
+                TimeUnit.MILLISECONDS
+        );
     }
 
-    public synchronized long update() {
+    public synchronized void update() {
         long time = System.currentTimeMillis();
 
         try {
             // Checking if the connection to the database is available, otherwise don't check for update
             if (!Bot.getInstance().getDatabase().isConnected()) {
                 System.err.println("Can't update database! No connection available");
-                return System.currentTimeMillis() - time;
+                return;
             }
 
             System.out.println("Checking pages...");
@@ -114,11 +111,8 @@ public class PageChecker extends Thread {
 
             time = System.currentTimeMillis() - time;
             System.out.println("Finished: Check complete (" + time + "ms)");
-
-            return time;
         } catch (Exception e) {
             e.printStackTrace();
-            return System.currentTimeMillis() - time;
         }
     }
 
@@ -169,9 +163,9 @@ public class PageChecker extends Thread {
     }
 
     public synchronized void cancel() {
-        interrupt();
+        service.shutdown();
 
-        if (delay < 0) {
+        if (period < 0) {
             return;
         }
 

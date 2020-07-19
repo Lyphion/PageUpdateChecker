@@ -36,15 +36,15 @@ public class Bot {
         registerCommands();
 
         // Parsing start arguments
-        long delay = PageChecker.DEFAULT_DELAY;
+        long period = PageChecker.DEFAULT_PERIOD;
         boolean sendingMails = true;
         long startTime = 0;
         for (int i = 0; i < args.length; i++) {
             final String part = args[i];
 
             // Parsing the delay time between checks
-            if (part.equals("-d") && i < args.length - 1) {
-                delay = Utils.calculateDelay(args[i + 1]);
+            if (part.equals("-period") && i < args.length - 1) {
+                period = Utils.calculatePeriod(args[i + 1]);
                 i++;
             }
             // Disable update mails
@@ -80,7 +80,7 @@ public class Bot {
         }
 
         // Creating Checker Thread
-        this.checker = new PageChecker(delay, startTime, sendingMails);
+        this.checker = new PageChecker(period, startTime, sendingMails);
     }
 
     public void start() {
@@ -146,9 +146,9 @@ public class Bot {
     private void registerCommands() {
         // Register all commands
         Command.registerCommand(new AddPageCommand());
-        Command.registerCommand(new DelayCommand());
         Command.registerCommand(new HelpCommand());
         Command.registerCommand(new MailCommand());
+        Command.registerCommand(new PeriodCommand());
         Command.registerCommand(new PrintCommand());
         Command.registerCommand(new RemovePageCommand());
         Command.registerCommand(new UpdateCommand());
